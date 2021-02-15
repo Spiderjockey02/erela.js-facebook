@@ -32,6 +32,13 @@ const REGEX = /(https?:\/\/)(www\.|m\.)?(facebook|fb).com\/.*\/videos\/.*/;
 const fetch = require('node-fetch').default;
 const { JSDOM } = require('jsdom');
 
+const check = (options) => {
+    if (typeof options.convertUnresolved !== "undefined" &&
+        typeof options.convertUnresolved !== "boolean")
+        throw new TypeError('Spotify option "convertUnresolved" must be a boolean.');
+
+};
+
 const buildSearch = (loadType, tracks, error) => ({
 	loadType: loadType,
 	tracks: tracks !== null && tracks !== void 0 ? tracks : [],
@@ -43,8 +50,10 @@ const buildSearch = (loadType, tracks, error) => ({
 });
 
 class Facebook extends erela_js_1.Plugin {
-	constructor() {
+	constructor(options) {
 		super();
+		check(options);
+    this.options = Object.assign({}, options);
 		this.functions = {
 			track: this.getTrack.bind(this),
 		};
