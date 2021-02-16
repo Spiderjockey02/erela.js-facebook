@@ -14,8 +14,8 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
-    "erela.js": "latest"
-    "jsdom": "^16.4.0",
+    "erela.js": "latest",
+    "jsdom": "^16.4.0"
   },
   "repository": {
     "type": "git",
