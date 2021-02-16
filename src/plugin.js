@@ -85,7 +85,8 @@ class Facebook extends erela_js_1.Plugin {
 						if (this.options.convertUnresolved) {
 							data.resolve();
 						}
-						return buildSearch('TRACK_LOADED', data.tracks, null);
+						const loadType = 'TRACK_LOADED';
+						return buildSearch(loadType, data.tracks, null);
 					} else {
 						const msg = 'Incorrect type for Facebook URL.';
 						return buildSearch('LOAD_FAILED', null, msg);

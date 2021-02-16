@@ -6,6 +6,7 @@ import {
   UnresolvedQuery,
   LoadType,
   SearchQuery,
+  Track,
 } from "erela.js";
 
 const REGEX = /(https?:\/\/)(www\.|m\.)?(facebook|fb).com\/.*\/videos\/.*/;
@@ -66,7 +67,7 @@ export class Facebook extends Plugin {
     const finalQuery = (query as SearchQuery).query || (query as string);
     if (finalQuery.match(REGEX)) {
       try {
-        const html = fetch(query.replace("/m.", "/")).then((res) => res.text());
+        const html = fetch((query as string).replace("/m.", "/").replace("/m.", "/")).then((res) => res.text());
         const document = new JSDOM(html).window.document;
         const rawdata = document.querySelector('script[type="application/ld+json"]').innerHTML;
         const json = JSON.parse(rawdata);
@@ -78,24 +79,20 @@ export class Facebook extends Plugin {
           author: json.author.name,
         };
         if (obj.streamURL) {
-          const data = this.manager.search(obj.streamURL, requester);
+          const data = await this.manager.search(obj.streamURL, requester);
+          // @ts-ignore
           data.tracks[0].title = obj.title;
+          // @ts-ignore
           data.tracks[0].thumbnail = obj.thumbnail;
+          // @ts-ignore
           data.tracks[0].uri = obj.url;
-          if (this.options.convertUnresolved) {
-            data.resolve();
-          }
-          return buildSearch("TRACK_LOADED", data.tracks, null);
+          return buildSearch("TRACK_LOADED", data.tracks as UnresolvedTrack[], null);
         } else {
           const msg = "Incorrect type for Facebook URL.";
           return buildSearch("LOAD_FAILED", null, msg);
         }
       } catch (e) {
-        return buildSearch(
-          e.loadType ?? "LOAD_FAILED",
-          null,
-          e.message ?? null
-        );
+        return buildSearch(e.loadType ?? "LOAD_FAILED", null, e.message ?? null);
       }
     }
     return this._search(query, requester);
