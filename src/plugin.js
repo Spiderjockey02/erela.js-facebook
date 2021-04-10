@@ -24,15 +24,10 @@ const __awaiter = (this && this.__awaiter) || function(thisArg, _arguments, P, g
 Object.defineProperty(exports, '__esModule', { value: true });
 exports.Facebook = void 0;
 const erela_js_1 = require('erela.js');
-const REGEX = /(https?:\/\/)(www\.|m\.)?(facebook|fb).com\/.*\/videos\/.*/;
-const fetch = require('node-fetch').default;
-const { JSDOM } = require('jsdom');
+const REGEX = /(?:https?:\/\/)?(?:www.|web.|m.)?(facebook|fb).(com|watch)\/(?:video.php\?v=\d+|(\S+)|photo.php\?v=\d+|\?v=\d+)|\S+\/videos\/((\S+)\/(\d+)|(\d+))\/?/g;
+const { get } = require('axios');
+const cheerio = require('cheerio');
 
-const check = (options) => {
-	if (typeof options.convertUnresolved !== 'undefined' &&
-        typeof options.convertUnresolved !== 'boolean') {throw new TypeError('Spotify option "convertUnresolved" must be a boolean.');}
-
-};
 
 const buildSearch = (loadType, tracks, error) => ({
 	loadType: loadType,
@@ -45,10 +40,8 @@ const buildSearch = (loadType, tracks, error) => ({
 });
 
 class Facebook extends erela_js_1.Plugin {
-	constructor(options = {}) {
+	constructor() {
 		super();
-		check(options);
-		this.options = Object.assign({}, options);
 	}
 
 	// load up the plugin
@@ -66,25 +59,22 @@ class Facebook extends erela_js_1.Plugin {
 			const [, type, id] = (_a = finalQuery.match(REGEX)) !== null && _a !== void 0 ? _a : [];
 			if (finalQuery.match(REGEX)) {
 				try {
-					const html = yield fetch(query.replace('/m.', '/')).then(res => res.text());
-					const document = new JSDOM(html).window.document;
-					const rawdata = document.querySelector('script[type="application/ld+json"]').innerHTML;
-					const json = JSON.parse(rawdata);
+					const html = yield get(query.replace('/m.', '/'));
+					const $ = cheerio.load(html.data);
+					const r = $('script[type=\'application/ld+json\']');
+					const json = JSON.parse(r[0].children[0].data);
 					const obj = {
-						title: document.querySelector('meta[property="og:title"]').attributes.item(1).value,
-						thumbnail: json.thumbnailUrl,
-						streamURL: json.url,
-						url: html.split('",page_uri:"')[1].split('",')[0],
-						author: json.author.name,
+						title: json.name || 'null',
+						thumbnail: json.thumbnailUrl || 'null',
+						streamURL: json.url || 'null',
+						url: query || 'null',
+						author: json.author.name || 'null',
 					};
 					if (obj.streamURL) {
 						const data = yield this.manager.search(obj.streamURL, requester);
 						data.tracks[0].title = obj.title;
 						data.tracks[0].thumbnail = obj.thumbnail;
 						data.tracks[0].uri = obj.url;
-						if (this.options.convertUnresolved) {
-							data.resolve();
-						}
 						const loadType = 'TRACK_LOADED';
 						return buildSearch(loadType, data.tracks, null);
 					} else {
@@ -92,7 +82,7 @@ class Facebook extends erela_js_1.Plugin {
 						return buildSearch('LOAD_FAILED', null, msg);
 					}
 				} catch (e) {
-					console.log(e);
+					console.log(e.message);
 					return buildSearch((_b = e.loadType) !== null && _b !== void 0 ? _b : 'LOAD_FAILED', null, (_c = e.message) !== null && _c !== void 0 ? _c : null, null);
 				}
 			}

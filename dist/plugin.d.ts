@@ -3,7 +3,7 @@ export declare class Facebook extends Plugin {
     private _search;
     private manager;
     private readonly options;
-    constructor(options: Options);
+    constructor();
     load(manager: Manager): void;
     private search;
 }

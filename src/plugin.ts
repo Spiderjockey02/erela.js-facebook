@@ -9,18 +9,9 @@ import {
   Track,
 } from "erela.js";
 
-const REGEX = /(https?:\/\/)(www\.|m\.)?(facebook|fb).com\/.*\/videos\/.*/;
-const fetch = require("node-fetch").default;
-const { JSDOM } = require("jsdom");
-
-const check = (options: Options) => {
-  if (!options) throw new TypeError("Options must not be empty.");
-  if (
-    typeof options.convertUnresolved !== "undefined" &&
-    typeof options.convertUnresolved !== "boolean"
-  )
-    throw new TypeError(' option "convertUnresolved" must be a boolean.');
-};
+const REGEX = /(?:https?:\/\/)?(?:www.|web.|m.)?(facebook|fb).(com|watch)\/(?:video.php\?v=\d+|(\S+)|photo.php\?v=\d+|\?v=\d+)|\S+\/videos\/((\S+)\/(\d+)|(\d+))\/?/;
+const { get } = require('axios');
+const cheerio = require('cheerio');
 
 const buildSearch = (
   loadType: LoadType,
@@ -46,12 +37,8 @@ export class Facebook extends Plugin {
   private manager: Manager;
   private readonly options: Options;
 
-  public constructor(options: Options) {
+  public constructor() {
     super();
-    check(options);
-    this.options = {
-      ...options,
-    };
   }
 
   public load(manager: Manager) {
@@ -67,16 +54,16 @@ export class Facebook extends Plugin {
     const finalQuery = (query as SearchQuery).query || (query as string);
     if (finalQuery.match(REGEX)) {
       try {
-        const html = fetch((query as string).replace("/m.", "/").replace("/m.", "/")).then((res) => res.text());
-        const document = new JSDOM(html).window.document;
-        const rawdata = document.querySelector('script[type="application/ld+json"]').innerHTML;
-        const json = JSON.parse(rawdata);
+        const html = get((query as string).replace('/m.', '/'));
+        const $ = cheerio.load(html.data);
+        const r = $('script[type=\'application/ld+json\']');
+        const json = JSON.parse(r[0].children[0].data);
         const obj = {
-          title: document.querySelector('meta[property="og:title"]').attributes.item(1).value,
-          thumbnail: json.thumbnailUrl,
-          streamURL: json.url,
-          url: html.split('",page_uri:"')[1].split('",')[0],
-          author: json.author.name,
+          title: json.name || 'null',
+          thumbnail: json.thumbnailUrl || 'null',
+          streamURL: json.url || 'null',
+          url: query || 'null',
+          author: json.author.name || 'null',
         };
         if (obj.streamURL) {
           const data = await this.manager.search(obj.streamURL, requester);
