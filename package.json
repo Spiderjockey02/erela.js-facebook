@@ -1,6 +1,6 @@
 {
   "name": "erela.js-facebook",
-  "version": "1.0.3",
+  "version": "1.0.4",
   "description": "Facebook plugin for erela.js",
   "main": "dist/index.js",
   "scripts": {
