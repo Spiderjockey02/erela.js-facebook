@@ -1,9 +1,9 @@
 <div align = "center">
-<a href="https://github.com/Spiderjockey02/erela.js-facebook">
+<a href="https://www.npmjs.com/package/erela.js-facebook">
 <img src="https://img.shields.io/npm/dw/erela.js-facebook?color=CC3534&logo=npm&style=for-the-badge" alt="Downloads">
 </a>
 
-<a href="https://github.com/Spiderjockey02/erela.js-facebook">
+<a href="hhttps://www.npmjs.com/package/erela.js-facebook">
 <img src="https://img.shields.io/npm/v/erela.js-facebook?color=red&label=Version&logo=npm&style=for-the-badge" alt="Npm version">
 </a>
 <br>
